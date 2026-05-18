@@ -1,0 +1,90 @@
+.esports-blog-page {
+    color: var(--text-color);
+}
+
+.esports-header {
+    height: 400px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 3rem;
+    border-bottom: 4px solid var(--secondary-color);
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
+}
+
+.esports-header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 4rem;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-shadow: 0 0 10px var(--secondary-color), 0 0 20px var(--secondary-color);
+}
+
+.esports-header p {
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.esports-post {
+    background: linear-gradient(135deg, rgba(20, 20, 30, 0.9), rgba(10, 10, 15, 0.95));
+    border: 1px solid rgba(0, 243, 255, 0.1);
+    border-radius: 4px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.esports-post::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--secondary-color);
+}
+
+.post-badge {
+    display: inline-block;
+    background: var(--secondary-color);
+    color: #000;
+    font-weight: bold;
+    padding: 0.2rem 0.8rem;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.post-badge.update {
+    background: #ff9900;
+}
+
+.post-badge.interview {
+    background: #00ff88;
+}
+
+.esports-post h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: #fff;
+}
+
+.esports-post p {
+    color: #aaa;
+    line-height: 1.6;
+}
+
+.esports-post:hover {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+}
