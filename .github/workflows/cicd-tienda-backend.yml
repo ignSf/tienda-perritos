@@ -32,18 +32,29 @@ jobs:
         docker tag tienda-backend:latest ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
         docker push ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
 
-    - name: Desplegar Backend vía SSM
+    - name: Desplegar Backend vía SSM (Contenedor Individual)
       run: |
-        aws ssm send-command \
+        # Extraemos la URL base del registro desde la URL del repositorio del Backend
+        ECR_REGISTRY=$(echo "${{ secrets.ECR_REPO_URL_BACKEND }}" | cut -d'/' -f1)
+
+        COMMAND_ID=$(aws ssm send-command \
           --instance-ids ${{ secrets.EC2_BACKEND_INSTANCE_ID }} \
           --document-name "AWS-RunShellScript" \
-          --comment "Actualizar tienda-backend desde ECR" \
-          --parameters '{"commands":[
-            "set -e",
-            "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
-            "docker pull ${{ secrets.ECR_REPO_URL_BACKEND }}:latest",
-            "docker stop tienda-backend || true",
-            "docker rm tienda-backend || true",
-            "docker run -d --name tienda-backend -p 3001:3001 ${{ secrets.ECR_REPO_URL_BACKEND }}:latest"
-          ]}' \
-          --output text
+          --comment "Desplegar contenedor tienda-backend sin Docker Compose" \
+          --parameters "{\"commands\":[
+            \"set -x\",
+            \"aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REGISTRY\",
+            \"docker pull ${{ secrets.ECR_REPO_URL_BACKEND }}:latest\",
+            \"docker stop tienda-backend || true\",
+            \"docker rm tienda-backend || true\",
+            \"docker run -d --name tienda-backend -p 3001:3001 ${{ secrets.ECR_REPO_URL_BACKEND }}:latest\"
+          ]}" \
+          --query "Command.CommandId" \
+          --output text)
+        
+        echo "Comando SSM de Backend enviado con ID: $COMMAND_ID"
+        echo "Esperando confirmación real de la EC2 del Backend..."
+        
+        aws ssm wait command-executed \
+          --command-id "$COMMAND_ID" \
+          --instance-id ${{ secrets.EC2_BACKEND_INSTANCE_ID }}
