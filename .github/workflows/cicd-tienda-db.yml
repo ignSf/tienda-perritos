@@ -32,18 +32,29 @@ jobs:
         docker tag tienda-db:latest ${{ secrets.ECR_REPO_URL_DB }}:latest
         docker push ${{ secrets.ECR_REPO_URL_DB }}:latest
 
-    - name: Desplegar DB vía SSM
+    - name: Desplegar DB vía SSM (Contenedor Individual)
       run: |
-        aws ssm send-command \
+        # Extraemos la URL base del registro desde la URL del repositorio de la DB
+        ECR_REGISTRY=$(echo "${{ secrets.ECR_REPO_URL_DB }}" | cut -d'/' -f1)
+
+        COMMAND_ID=$(aws ssm send-command \
           --instance-ids ${{ secrets.EC2_DB_INSTANCE_ID }} \
           --document-name "AWS-RunShellScript" \
-          --comment "Actualizar tienda-db desde ECR" \
-          --parameters '{"commands":[
-            "set -e",
-            "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
-            "docker pull ${{ secrets.ECR_REPO_URL_DB }}:latest",
-            "docker stop tienda-db || true",
-            "docker rm tienda-db || true",
-            "docker run -d --name tienda-db -p 3306:3306 -v dbdata:/var/lib/mysql ${{ secrets.ECR_REPO_URL_DB }}:latest"
-          ]}' \
-          --output text
+          --comment "Desplegar contenedor tienda-db sin Docker Compose" \
+          --parameters "{\"commands\":[
+            \"set -x\",
+            \"aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REGISTRY\",
+            \"docker pull ${{ secrets.ECR_REPO_URL_DB }}:latest\",
+            \"docker stop tienda-db || true\",
+            \"docker rm tienda-db || true\",
+            \"docker run -d --name tienda-db -p 3306:3306 -v dbdata:/var/lib/mysql ${{ secrets.ECR_REPO_URL_DB }}:latest\"
+          ]}" \
+          --query "Command.CommandId" \
+          --output text)
+        
+        echo "Comando SSM de DB enviado con ID: $COMMAND_ID"
+        echo "Esperando confirmación real de la EC2 de Base de Datos..."
+        
+        aws ssm wait command-executed \
+          --command-id "$COMMAND_ID" \
+          --instance-id ${{ secrets.EC2_DB_INSTANCE_ID }}
