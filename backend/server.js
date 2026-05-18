@@ -4,7 +4,7 @@ const mysql = require("mysql2/promise");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-
+/* hola esto es un comentario */
 const {
   DB_HOST = "10.0.135.67", // acá colocar la IP Privada EC2 DB
   DB_USER = "root",
